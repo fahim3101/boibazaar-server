@@ -11,7 +11,9 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL?.split(',') || true,
+}));
 app.use(express.json());
 
 // Attempt the MongoDB connection before every request (cheap no-op if
