@@ -14,13 +14,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB (cached across serverless invocations)
-connectDB();
+// Attempt the MongoDB connection before every request (cheap no-op if
+// already connected). This is more reliable in a serverless environment
+// than a single fire-and-forget call at module load time.
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 app.get("/", (req, res) => {
   res.json({ message: "BoiBazaar API is running." });
 });
-
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/admin", adminRoutes);
