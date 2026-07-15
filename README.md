@@ -45,7 +45,7 @@ server/
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in:
+`.env` fill in:
 
 | Variable | Description |
 |---|---|
