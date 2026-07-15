@@ -1,86 +1,123 @@
-# BoiBazaar Server (Backend API)
+# BoiBazaar — Backend API
 
-Express + TypeScript + MongoDB + JWT backend for BoiBazaar, a used textbook exchange
-platform for university students.
+Express + TypeScript + MongoDB backend powering **BoiBazaar**, a peer-to-peer
+marketplace where university students in Bangladesh buy and sell secondhand
+textbooks and study materials.
+
+**Live API:** https://boibazaar-server.vercel.app
+**Frontend repo:** [boibazaar-client](https://github.com/fahim3101/boibazaar-client)
+
+## Features
+
+- JWT-based authentication (register/login) with bcrypt password hashing
+- Google & Facebook social login via Firebase Admin SDK
+- Role-based authorization (`user` / `admin`)
+- Full CRUD for book listings with ownership checks
+- Search, multi-field filtering, sorting, and pagination
+- Reviews & ratings per listing
+- Admin endpoints for platform-wide moderation
 
 ## Tech Stack
-- Node.js + Express.js
-- TypeScript
-- MongoDB with Mongoose
-- JWT authentication + bcrypt password hashing
+
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js + Express.js |
+| Language | TypeScript |
+| Database | MongoDB (Mongoose) |
+| Auth | JWT + bcrypt, Firebase Admin SDK (social login) |
+| Deployment | Vercel (serverless functions) |
+
+## Project Structure
+
+```
+server/
+├── src/
+│   ├── config/          # DB connection, Firebase Admin init
+│   ├── controllers/     # Route handlers (auth, books, admin)
+│   ├── middleware/       # JWT auth guard, admin guard, error handler
+│   ├── models/           # Mongoose schemas (User, Book)
+│   ├── routes/           # Express routers
+│   ├── seed/             # Demo data seed script
+│   └── index.ts          # App entry point
+├── vercel.json
+└── package.json
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in:
+
+| Variable | Description |
+|---|---|
+| `MONGO_URI` | MongoDB Atlas connection string, including database name |
+| `JWT_SECRET` | Long random string used to sign JWTs |
+| `PORT` | Local dev port (ignored on Vercel) |
+| `CLIENT_URL` | Deployed frontend URL (for CORS) |
+| `FIREBASE_PROJECT_ID` | From Firebase service account JSON |
+| `FIREBASE_CLIENT_EMAIL` | From Firebase service account JSON |
+| `FIREBASE_PRIVATE_KEY` | From Firebase service account JSON (keep the `\n` escapes) |
 
 ## Local Setup
 
-1. Install dependencies:
-   ```
-   npm install
-   ```
+```bash
+npm install
+cp .env.example .env   # then fill in the values above
+npm run seed            # creates demo user, demo admin, and 8 sample listings
+npm run dev              # runs on http://localhost:5000
+```
 
-2. Copy `.env.example` to `.env` and fill in your own values:
-   ```
-   cp .env.example .env
-   ```
-   - `MONGO_URI` — your MongoDB Atlas connection string
-   - `JWT_SECRET` — any long random string
-   - `CLIENT_URL` — your frontend URL (http://localhost:3000 for local dev)
+**Demo credentials (created by the seed script):**
+| Role | Email | Password |
+|---|---|---|
+| Student | `demo@boibazaar.com` | `Demo1234!` |
+| Admin | `admin@boibazaar.com` | `Admin1234!` |
 
-### Troubleshooting: "querySrv ENOTFOUND" / MongoDB won't connect
+## API Reference
 
-Some ISPs and routers (a known recurring issue in Bangladesh) fail to resolve
-the SRV/TXT DNS records that `mongodb+srv://` connection strings depend on.
-`src/config/db.ts` already forces Node to use Google's public DNS (8.8.8.8) to
-work around this — no extra setup needed in most cases.
+### Auth — `/api/auth`
+| Method | Route | Access | Description |
+|---|---|---|---|
+| POST | `/register` | Public | Register with name/email/password |
+| POST | `/login` | Public | Log in, returns JWT |
+| POST | `/social` | Public | Google/Facebook login via Firebase ID token |
+| GET | `/me` | Private | Get the logged-in user |
 
-If it still fails, get the **non-SRV** connection string instead:
-1. In Atlas, go to your cluster → **Connect** → **Drivers**
-2. Click **"See full connection string"** or select an older driver version —
-   Atlas will show a `mongodb://` string with three explicit hosts
-   (e.g. `mongodb://shard-00-00.xxx.mongodb.net:27017,shard-00-01...`) instead
-   of the single `mongodb+srv://cluster.mongodb.net` host.
-3. Paste that full string into `MONGO_URI` in your `.env` — this skips SRV
-   lookup entirely since it doesn't rely on the SRV record at all.
+### Books — `/api/books`
+| Method | Route | Access | Description |
+|---|---|---|---|
+| GET | `/` | Public | List books — supports `search`, `subject`, `condition`, `minPrice`, `maxPrice`, `sort`, `page`, `limit` |
+| GET | `/mine` | Private | Get the logged-in user's own listings |
+| GET | `/:id` | Public | Get one listing + related listings |
+| POST | `/` | Private | Create a listing |
+| DELETE | `/:id` | Private | Delete your own listing |
+| POST | `/:id/reviews` | Private | Add a review |
 
-3. Seed demo data (creates a demo user, a demo admin, and 8 sample book listings):
-   ```
-   npm run seed
-   ```
-   Demo user login: `demo@boibazaar.com` / `Demo1234!`
-   Demo admin login: `admin@boibazaar.com` / `Admin1234!` (unlocks the Admin Panel link in the navbar)
+### Admin — `/api/admin`
+| Method | Route | Access | Description |
+|---|---|---|---|
+| GET | `/stats` | Admin | Platform-wide totals |
+| GET | `/books` | Admin | View every listing, any seller |
+| GET | `/users` | Admin | View every registered user |
+| DELETE | `/books/:id` | Admin | Remove any listing (moderation) |
 
-4. Run the dev server:
-   ```
-   npm run dev
-   ```
-   Server runs at http://localhost:5000
+## Deployment (Vercel)
 
-## API Endpoints
+1. Push this repo to GitHub, import it at [vercel.com/new](https://vercel.com/new)
+2. Add all environment variables listed above in the Vercel project settings
+3. Deploy — `vercel.json` runs the Express app as a serverless function
+4. After the frontend is deployed too, update `CLIENT_URL` here and redeploy
 
-| Method | Route                    | Access  | Description                     |
-|--------|---------------------------|---------|----------------------------------|
-| POST   | /api/auth/register        | Public  | Register new user                |
-| POST   | /api/auth/login           | Public  | Log in, returns JWT              |
-| POST   | /api/auth/social           | Public  | Google/Facebook login via Firebase ID token |
-| GET    | /api/auth/me               | Private | Get current logged-in user       |
-| GET    | /api/books                 | Public  | List books (search/filter/sort/pagination) |
-| GET    | /api/books/mine             | Private | Get logged-in user's own listings |
-| GET    | /api/books/:id              | Public  | Get single book + related books  |
-| POST   | /api/books                  | Private | Create a new listing             |
-| DELETE | /api/books/:id              | Private | Delete own listing               |
-| POST   | /api/books/:id/reviews       | Private | Add a review to a book           |
-| GET    | /api/admin/stats             | Admin   | Platform-wide totals              |
-| GET    | /api/admin/books              | Admin   | View every listing (any seller)   |
-| GET    | /api/admin/users              | Admin   | View every registered user         |
-| DELETE | /api/admin/books/:id           | Admin   | Remove any listing (moderation)   |
+## Troubleshooting
 
-## Deploying to Vercel
+**`querySrv ENOTFOUND` locally:** some Bangladeshi ISPs fail to resolve the
+`mongodb+srv://` SRV DNS record. `src/config/db.ts` automatically forces
+Node to use Google DNS (8.8.8.8) — but only outside of Vercel, since Vercel's
+own network doesn't have this issue.
 
-1. Push this folder to its own GitHub repo (e.g. `boibazaar-server`).
-2. Go to https://vercel.com/new and import that repo.
-3. In the Vercel project settings, add Environment Variables:
-   - `MONGO_URI`
-   - `JWT_SECRET`
-   - `CLIENT_URL` (your deployed frontend URL)
-   - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
-     (from your Firebase service account JSON — see the main setup guide)
-4. Deploy. Vercel will use `vercel.json` to run the Express app as a serverless function.
-5. Your API will be live at `https://your-project-name.vercel.app`
+**500 `FUNCTION_INVOCATION_FAILED`:** the DB connection logic never calls
+`process.exit()`, since that would crash the whole serverless function on
+every request. Connection failures are logged and returned as normal error
+responses instead.
+
+## Author
+Built by **MD Fahim Rana** — [GitHub](https://github.com/fahim3101) · [LinkedIn](https://linkedin.com/in/fahim-rana)
