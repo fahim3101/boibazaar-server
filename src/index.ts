@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import morgan from "morgan";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import bookRoutes from "./routes/bookRoutes";
@@ -17,6 +18,11 @@ app.use(
   })
 );
 app.use(express.json());
+// Analytics-friendly request logging - useful alongside Vercel Analytics
+// Logs method, url, status and response time; disabled in test env
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan("tiny"));
+}
 
 // Attempt the MongoDB connection before every request (cheap no-op if
 // already connected). This is more reliable in a serverless environment
