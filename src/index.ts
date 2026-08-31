@@ -12,9 +12,24 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
+  : [];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL?.split(",") || true,
+    origin: (origin, callback) => {
+      // Allow non-browser requests (curl, mobile) with no origin
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // In development, be permissive for localhost:3000/3001
+      if (origin.startsWith("http://localhost:")) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
   })
 );
 app.use(express.json());
