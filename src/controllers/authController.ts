@@ -118,7 +118,8 @@ export const socialLogin = async (req: AuthRequest, res: Response) => {
     } else if (user.authProvider === "local") {
       // An account with this email already exists via email/password signup.
       return res.status(409).json({
-        message: "An account with this email already exists. Please log in with your password instead.",
+        message:
+          "An account with this email already exists. Please log in with your password instead.",
       });
     }
 
@@ -126,7 +127,9 @@ export const socialLogin = async (req: AuthRequest, res: Response) => {
 
     res.status(200).json({ token, user: toUserPayload(user) });
   } catch (error: any) {
-    res.status(401).json({ message: "Social sign-in failed. Please try again.", error: error.message });
+    res
+      .status(401)
+      .json({ message: "Social sign-in failed. Please try again.", error: error.message });
   }
 };
 
