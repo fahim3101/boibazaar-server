@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
@@ -11,6 +13,18 @@ import { errorHandler, notFound } from "./middleware/errorHandler";
 dotenv.config();
 
 const app = express();
+
+app.use(helmet());
+
+// Brute-force guard for auth + review endpoints (serverless-safe in-memory store).
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts. Please try again later." },
+});
+app.use("/api/auth", authLimiter);
 
 const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",")
