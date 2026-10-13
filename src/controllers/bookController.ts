@@ -56,8 +56,9 @@ export const getBooks = async (req: AuthRequest, res: Response) => {
       page: pageNum,
       pages: Math.ceil(total / limitNum) || 1,
     });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch books.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getBooks failed:", error);
+    res.status(500).json({ message: "Could not fetch books." });
   }
 };
 
@@ -66,8 +67,9 @@ export const getMyBooks = async (req: AuthRequest, res: Response) => {
   try {
     const books = await Book.find({ sellerId: req.userId }).sort({ createdAt: -1 });
     res.status(200).json({ books });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch your listings.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getMyBooks failed:", error);
+    res.status(500).json({ message: "Could not fetch your listings." });
   }
 };
 
@@ -87,8 +89,9 @@ export const getBookById = async (req: AuthRequest, res: Response) => {
       .sort({ createdAt: -1 });
 
     res.status(200).json({ book, related });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch book details.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getBookById failed:", error);
+    res.status(500).json({ message: "Could not fetch book details." });
   }
 };
 
@@ -143,8 +146,9 @@ export const createBook = async (req: AuthRequest, res: Response) => {
     });
 
     res.status(201).json({ book });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not create listing.", error: error.message });
+  } catch (error: unknown) {
+    console.error("createBook failed:", error);
+    res.status(500).json({ message: "Could not create listing." });
   }
 };
 
@@ -162,8 +166,9 @@ export const deleteBook = async (req: AuthRequest, res: Response) => {
 
     await book.deleteOne();
     res.status(200).json({ message: "Listing deleted successfully." });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not delete listing.", error: error.message });
+  } catch (error: unknown) {
+    console.error("deleteBook failed:", error);
+    res.status(500).json({ message: "Could not delete listing." });
   }
 };
 
@@ -194,7 +199,8 @@ export const addReview = async (req: AuthRequest, res: Response) => {
 
     await book.save();
     res.status(201).json({ book });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not add review.", error: error.message });
+  } catch (error: unknown) {
+    console.error("addReview failed:", error);
+    res.status(500).json({ message: "Could not add review." });
   }
 };
