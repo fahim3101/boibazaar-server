@@ -26,8 +26,11 @@ export const connectDB = async (): Promise<void> => {
   }
 
   try {
+    // Keep under Vercel's ~10s hobby function limit so a slow Mongo
+    // handshake fails fast instead of timing out the whole request.
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 8000,
+      maxPoolSize: 1,
     });
     isConnected = true;
     console.log("MongoDB connected successfully.");
