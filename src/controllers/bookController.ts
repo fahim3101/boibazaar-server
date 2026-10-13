@@ -129,13 +129,23 @@ export const createBook = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Please fill in all required fields." });
     }
 
+    const priceNum = Number(price);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      return res.status(400).json({ message: "Price must be a positive number." });
+    }
+
+    const validConditions = ["New", "Like New", "Good", "Fair", "Worn"];
+    if (!validConditions.includes(condition)) {
+      return res.status(400).json({ message: "Please choose a valid condition." });
+    }
+
     const book = await Book.create({
       title,
       author,
       subject,
       edition: edition || "1st",
       condition,
-      price,
+      price: priceNum,
       shortDescription,
       fullDescription,
       imageUrl: imageUrl || "",
