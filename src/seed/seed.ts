@@ -115,56 +115,63 @@ const demoBooks = [
 ];
 
 const run = async () => {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const email = "demo@boibazaar.com";
-  let demoUser = await User.findOne({ email });
+    const email = "demo@boibazaar.com";
+    let demoUser = await User.findOne({ email });
 
-  if (!demoUser) {
-    const hashedPassword = await bcrypt.hash("Demo1234!", 10);
-    demoUser = await User.create({
-      name: "Demo Student",
-      email,
-      password: hashedPassword,
-      university: "Dhaka University",
-      phone: "01700000000",
-      role: "user",
-    });
-    console.log("Demo user created: demo@boibazaar.com / Demo1234!");
-  } else {
-    console.log("Demo user already exists.");
+    if (!demoUser) {
+      const hashedPassword = await bcrypt.hash("Demo1234!", 10);
+      demoUser = await User.create({
+        name: "Demo Student",
+        email,
+        password: hashedPassword,
+        university: "Dhaka University",
+        phone: "01700000000",
+        role: "user",
+      });
+      console.log("Demo user ready: demo@boibazaar.com");
+    } else {
+      console.log("Demo user already exists.");
+    }
+
+    const adminEmail = "admin@boibazaar.com";
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      const hashedAdminPassword = await bcrypt.hash("Admin1234!", 10);
+      await User.create({
+        name: "BoiBazaar Admin",
+        email: adminEmail,
+        password: hashedAdminPassword,
+        university: "",
+        role: "admin",
+      });
+      console.log("Demo admin ready: admin@boibazaar.com");
+    } else {
+      console.log("Demo admin already exists.");
+    }
+
+    // Only seed books when the demo seller has none: re-running seed must
+    // never wipe listings the demo user created through the UI.
+    const existingBooks = await Book.countDocuments({ sellerEmail: email });
+    if (existingBooks === 0) {
+      const booksToInsert = demoBooks.map((b) => ({
+        ...b,
+        sellerId: demoUser!._id,
+        sellerName: demoUser!.name,
+        sellerEmail: demoUser!.email,
+      }));
+
+      await Book.insertMany(booksToInsert);
+      console.log(`Inserted ${booksToInsert.length} demo book listings.`);
+    } else {
+      console.log(`Skipped book seeding: ${existingBooks} demo listing(s) already exist.`);
+    }
+  } finally {
+    await mongoose.disconnect();
+    process.exit(0);
   }
-
-  const adminEmail = "admin@boibazaar.com";
-  const existingAdmin = await User.findOne({ email: adminEmail });
-  if (!existingAdmin) {
-    const hashedAdminPassword = await bcrypt.hash("Admin1234!", 10);
-    await User.create({
-      name: "BoiBazaar Admin",
-      email: adminEmail,
-      password: hashedAdminPassword,
-      university: "",
-      role: "admin",
-    });
-    console.log("Demo admin created: admin@boibazaar.com / Admin1234!");
-  } else {
-    console.log("Demo admin already exists.");
-  }
-
-  await Book.deleteMany({ sellerEmail: email });
-
-  const booksToInsert = demoBooks.map((b) => ({
-    ...b,
-    sellerId: demoUser!._id,
-    sellerName: demoUser!.name,
-    sellerEmail: demoUser!.email,
-  }));
-
-  await Book.insertMany(booksToInsert);
-  console.log(`Inserted ${booksToInsert.length} demo book listings.`);
-
-  await mongoose.disconnect();
-  process.exit(0);
 };
 
 run().catch((err) => {
