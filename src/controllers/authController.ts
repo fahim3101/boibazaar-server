@@ -47,8 +47,9 @@ export const registerUser = async (req: AuthRequest, res: Response) => {
     const token = generateToken(String(user._id));
 
     res.status(201).json({ token, user: toUserPayload(user) });
-  } catch (error: any) {
-    res.status(500).json({ message: "Registration failed.", error: error.message });
+  } catch (error: unknown) {
+    console.error("registerUser failed:", error);
+    res.status(500).json({ message: "Registration failed." });
   }
 };
 
@@ -79,8 +80,9 @@ export const loginUser = async (req: AuthRequest, res: Response) => {
     const token = generateToken(String(user._id));
 
     res.status(200).json({ token, user: toUserPayload(user) });
-  } catch (error: any) {
-    res.status(500).json({ message: "Login failed.", error: error.message });
+  } catch (error: unknown) {
+    console.error("loginUser failed:", error);
+    res.status(500).json({ message: "Login failed." });
   }
 };
 
@@ -126,10 +128,9 @@ export const socialLogin = async (req: AuthRequest, res: Response) => {
     const token = generateToken(String(user._id));
 
     res.status(200).json({ token, user: toUserPayload(user) });
-  } catch (error: any) {
-    res
-      .status(401)
-      .json({ message: "Social sign-in failed. Please try again.", error: error.message });
+  } catch (error: unknown) {
+    console.error("socialLogin failed:", error);
+    res.status(401).json({ message: "Social sign-in failed. Please try again." });
   }
 };
 
@@ -140,7 +141,8 @@ export const getMe = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "User not found." });
     }
     res.status(200).json({ user });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch user.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getMe failed:", error);
+    res.status(500).json({ message: "Could not fetch user." });
   }
 };

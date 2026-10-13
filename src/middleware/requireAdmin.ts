@@ -10,7 +10,8 @@ export const requireAdmin = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(403).json({ message: "Admin access only." });
     }
     next();
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not verify admin access.", error: error.message });
+  } catch (error: unknown) {
+    console.error("requireAdmin failed:", error);
+    res.status(500).json({ message: "Could not verify admin access." });
   }
 };

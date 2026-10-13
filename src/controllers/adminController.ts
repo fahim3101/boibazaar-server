@@ -11,8 +11,9 @@ export const getAdminStats = async (req: AuthRequest, res: Response) => {
       Book.countDocuments(),
     ]);
     res.status(200).json({ totalUsers, totalBooks });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch admin stats.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getAdminStats failed:", error);
+    res.status(500).json({ message: "Could not fetch admin stats." });
   }
 };
 
@@ -21,8 +22,9 @@ export const getAllBooksAdmin = async (req: AuthRequest, res: Response) => {
   try {
     const books = await Book.find().sort({ createdAt: -1 });
     res.status(200).json({ books });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch listings.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getAllBooksAdmin failed:", error);
+    res.status(500).json({ message: "Could not fetch listings." });
   }
 };
 
@@ -31,8 +33,9 @@ export const getAllUsersAdmin = async (req: AuthRequest, res: Response) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
     res.status(200).json({ users });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not fetch users.", error: error.message });
+  } catch (error: unknown) {
+    console.error("getAllUsersAdmin failed:", error);
+    res.status(500).json({ message: "Could not fetch users." });
   }
 };
 
@@ -45,7 +48,8 @@ export const adminDeleteBook = async (req: AuthRequest, res: Response) => {
     }
     await book.deleteOne();
     res.status(200).json({ message: "Listing removed by admin." });
-  } catch (error: any) {
-    res.status(500).json({ message: "Could not delete listing.", error: error.message });
+  } catch (error: unknown) {
+    console.error("adminDeleteBook failed:", error);
+    res.status(500).json({ message: "Could not delete listing." });
   }
 };
