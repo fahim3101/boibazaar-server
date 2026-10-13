@@ -41,8 +41,9 @@ export const getBooks = async (req: AuthRequest, res: Response) => {
     if (sort === "rating") sortOption = { avgRating: -1 };
     if (sort === "newest") sortOption = { createdAt: -1 };
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.max(1, parseInt(limit));
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    // Cap page size so ?limit=1000000 can't dump the collection at once.
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 8));
     const skip = (pageNum - 1) * limitNum;
 
     const [books, total] = await Promise.all([
