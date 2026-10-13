@@ -192,15 +192,24 @@ export const addReview = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Rating and comment are required." });
     }
 
+    const ratingNum = Number(rating);
+    if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      return res.status(400).json({ message: "Rating must be a whole number from 1 to 5." });
+    }
+
     const book = await Book.findById(req.params.id);
     if (!book) {
       return res.status(404).json({ message: "Book listing not found." });
     }
 
+    if (book.reviews.some((r) => String(r.userId) === req.userId)) {
+      return res.status(409).json({ message: "You have already reviewed this listing." });
+    }
+
     book.reviews.push({
       userId: req.userId as any,
       userName: userName || "Anonymous",
-      rating: Number(rating),
+      rating: ratingNum,
       comment,
       createdAt: new Date(),
     });
