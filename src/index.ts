@@ -39,9 +39,14 @@ app.use(
       if (!origin) return callback(null, true);
       if (allowedOrigins.length === 0) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
-      // In development, be permissive for localhost:3000/3001
-      if (origin.startsWith("http://localhost:")) return callback(null, true);
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
+      // Localhost is only trusted outside Vercel (local dev).
+      if (!process.env.VERCEL && origin.startsWith("http://localhost:")) {
+        return callback(null, true);
+      }
+      // Generic message with 403 status: never echo the rejected origin.
+      const corsError = new Error("Origin not allowed.") as Error & { statusCode: number };
+      corsError.statusCode = 403;
+      return callback(corsError);
     },
     credentials: true,
   })
