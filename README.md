@@ -226,12 +226,12 @@ curl -X POST http://localhost:5000/api/auth/register \
 
 ### Admin — `/api/admin` (requires `role: admin`)
 
-| Method | Route        | Access | Description                                          |
-| ------ | ------------ | ------ | ---------------------------------------------------- |
-| GET    | `/stats`     | Admin  | `200 {totalBooks,totalUsers,totalAdmins, avgPrice?}` |
-| GET    | `/books`     | Admin  | All listings any seller                              |
-| GET    | `/users`     | Admin  | All users                                            |
-| DELETE | `/books/:id` | Admin  | Moderation - delete any                              |
+| Method | Route        | Access | Description                   |
+| ------ | ------------ | ------ | ----------------------------- |
+| GET    | `/stats`     | Admin  | `200 {totalUsers,totalBooks}` |
+| GET    | `/books`     | Admin  | All listings any seller       |
+| GET    | `/users`     | Admin  | All users                     |
+| DELETE | `/books/:id` | Admin  | Moderation - delete any       |
 
 ---
 
