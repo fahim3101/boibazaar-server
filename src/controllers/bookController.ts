@@ -1,5 +1,6 @@
 import { Response } from "express";
-import { Book } from "../models/Book";
+import { FilterQuery, Types } from "mongoose";
+import { Book, IBook } from "../models/Book";
 import { AuthRequest } from "../middleware/auth";
 
 // GET /api/books - public, supports search, filter, sort, pagination
@@ -16,7 +17,7 @@ export const getBooks = async (req: AuthRequest, res: Response) => {
       limit = "8",
     } = req.query as Record<string, string>;
 
-    const query: any = {};
+    const query: FilterQuery<IBook> = {};
 
     if (search) {
       query.$or = [
@@ -35,7 +36,7 @@ export const getBooks = async (req: AuthRequest, res: Response) => {
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    let sortOption: any = { createdAt: -1 };
+    let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
     if (sort === "price_low") sortOption = { price: 1 };
     if (sort === "price_high") sortOption = { price: -1 };
     if (sort === "rating") sortOption = { avgRating: -1 };
@@ -202,12 +203,16 @@ export const addReview = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ message: "Book listing not found." });
     }
 
+    if (!req.userId) {
+      return res.status(401).json({ message: "Not authorized. Please log in." });
+    }
+
     if (book.reviews.some((r) => String(r.userId) === req.userId)) {
       return res.status(409).json({ message: "You have already reviewed this listing." });
     }
 
     book.reviews.push({
-      userId: req.userId as any,
+      userId: new Types.ObjectId(req.userId),
       userName: userName || "Anonymous",
       rating: ratingNum,
       comment,

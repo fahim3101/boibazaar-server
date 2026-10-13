@@ -1,11 +1,11 @@
 import { Response } from "express";
 import bcrypt from "bcryptjs";
-import { User } from "../models/User";
+import { User, IUser } from "../models/User";
 import { generateToken } from "../utils/generateToken";
 import { AuthRequest } from "../middleware/auth";
 import { getFirebaseAdmin } from "../config/firebaseAdmin";
 
-const toUserPayload = (user: any) => ({
+const toUserPayload = (user: IUser) => ({
   id: user._id,
   name: user.name,
   email: user.email,
